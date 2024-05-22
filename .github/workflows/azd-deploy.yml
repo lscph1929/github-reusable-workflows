@@ -1,0 +1,111 @@
+name: 'azd - Deployments'
+#description: Mucking around with Azure Developer Environments
+#branding:
+#  icon: filter
+#  color: purple
+
+on:
+  [workflow_dispatch]
+  ##push:
+  ##  branches:
+  ##  - main
+  ##  paths:
+  ##    - 'src/terraform/**'
+  ##    - '.github/workflows/**'
+  ### pull_request:
+  ###  branches:
+  ###  - main
+  ###  paths:
+  ###    - 'src/terraform/**'
+  ###    - '.github/workflows/**'
+  ### schedule:
+  ###    - cron: '49 5 * * 0' # runs every sunday at 5:49 am (UTC)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  
+#Special permissions required for OIDC authentication
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  AZURE_DEV_COLLECT_TELEMETRY: no
+
+jobs:
+   azd-run:
+    strategy:
+      matrix:
+        ## runs-on: [ubuntu-latest, macos-latest, windows-latest]
+        runs-on: [ubuntu-latest]
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - name: 'install-azd'
+        uses: Azure/setup-azd@v0.1.0
+        with:
+          version: 'latest'
+
+      - name: 'config-azd'
+        run: |
+          
+          ## REMOTE STATE for Terraform
+          #azd env set RS_STORAGE_ACCOUNT your_storage_account_name
+          #azd env set RS_CONTAINER_NAME your_terraform_container_name
+          #azd env set RS_RESOURCE_GROUP your_storage_account_resource_group
+
+      - name: 'test-azd'
+        run: |
+          export exitcode=0
+          set | grep -i AZURE
+          azd version --no-prompt
+          azd config set platform.type devcenter --no-prompt
+          azd config show --no-prompt
+          azd config list-alpha --no-prompt
+          azd template list
+          azd env refresh -e ${AZURE_ENVIRONMENT} 
+          ## azd config set defaults.subscription ${ARM_SUBSCRIPTION_ID} --no-prompt
+          ## azd config set defaults.location ${AZURE_LOCATION} --no-prompt
+          ## eg: azd config set alpha.resourceGroupDeployments on --no-prompt
+          ## azd env get-values --no-prompt
+          ## azd auth login --check-status --no-prompt
+          export exitcode=0
+
+      - name: 'run-azd'
+        run: |
+            export exitcode=0
+            set | grep -i AZURE
+            azd version --no-prompt
+            azd config show --no-prompt
+            ## azd env get-values --no-prompt
+            ## azd auth login --check-status --no-prompt
+            ## azd --debug init --template JasonTaylorDev/azd-blazor --no-prompt 
+            export exitcode=0
+  
+        
+      - name: 'push-azd'
+        run: |
+          ## git config --global user.name ${GITHUB_ACTOR}
+          ## git config --global user.email "user email"
+          git add &lt;pathspec&gt; git commit -m "GitHub Action commit"
+          git push
+
+      - name: Provision Infrastructure
+        run: azd provision --no-prompt
+        env:
+          AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
+          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+          ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          RS_RESOURCE_GROUP: ${{ vars.RS_RESOURCE_GROUP }}
+          RS_STORAGE_ACCOUNT: ${{ vars.RS_STORAGE_ACCOUNT }}
+          RS_CONTAINER_NAME: ${{ vars.RS_CONTAINER_NAME }}
+  
+      - name: 'Deploy Application'
+        run: azd deploy --no-prompt
+        env:
+          AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
+          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}          
