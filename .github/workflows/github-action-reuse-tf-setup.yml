@@ -19,4 +19,4 @@ jobs:
 
     ## Show Terraform version
     - name: Show Terraform Version
-      run: terraform -chdir=$TERRAFORM_WORKING_DIRECTORY version
+      run: terraform -chdir="${{ vars.TERRAFORM_WORKING_DIRECTORY }}" version
