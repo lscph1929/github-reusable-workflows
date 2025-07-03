@@ -1,0 +1,15 @@
+name: Terraform - Run Plan / Apply for Terraform after OIDC logon
+
+jobs:
+  tf-plan:
+    strategy:
+      matrix:
+        ## runs-on: [ubuntu-latest, macos-latest, windows-latest]
+        runs-on: [ubuntu-latest]
+    runs-on: ${{ matrix.runs-on }}
+
+  terraform-planapply:
+    ## Call reusable workflow
+    uses: webstean/github-reusable-workflows/.github/workflows/github-action-reuse-tf-planapply.yml@main
+    with:
+      target: ${{ matrix.target }}
