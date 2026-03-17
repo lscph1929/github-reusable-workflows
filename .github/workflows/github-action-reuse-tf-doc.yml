@@ -19,12 +19,6 @@ jobs:
     - name: Greetings
       run: echo "GitHub Runner running as ${GITHUB_ACTOR} on repo:${GITHUB_REPOSITORY} with ${RUNNER_OS}!"
    
-    ## Harden runner
-##    - name: Harden Runner
-##      uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
-##     with:
-##       egress-policy: audit
-
     ## Login
     - name: OIDC Login to Azure
       uses: azure/login@v2
